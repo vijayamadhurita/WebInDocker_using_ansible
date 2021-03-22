@@ -1,58 +1,70 @@
 - hosts: all
   tasks:
-  - file:  
+  - name: Create a directory
+    file:  
      state: directory 
      path: "/dvd5"
 
-  - mount:  
+  - name: Mount directory
+    mount:  
      path: "/dvd5" 
      src: "/dev/cdrom" 
      fstype: "iso9660" 
      state: mounted
 
-  - yum_repository: 
+  - name: Configuring yum repository for BaseOS
+    yum_repository: 
      name: mydvd1 
-     description: 'yum repo for BaseOS'
+     description: 'my yum repo for BaseOS'
      baseurl: /dvd5/BaseOS 
      gpgcheck: no
 
-  - yum_repository:  
+  - name: Configuring yum repository for AppStream
+    yum_repository:  
      name: mydvd2 
-     description: 'yum repo for AppStream' 
+     description: 'my yum repo for AppStream' 
      baseurl: /dvd5/AppStream 
      gpgcheck: no
 
 
-  - yum_repository:  
+  - name: Configuring yum repository for docker
+    yum_repository:  
      name: 'docker' 
      description: 'yum repo docker' 
      baseurl: 'https://download.docker.com/linux/centos/7/x86_64/stable' 
      gpgcheck: no
 
-  - command: yum install docker-ce --nobest -y 
+  - name: Installing docker
+    command: yum install docker-ce --nobest -y 
   
-  - package:
+  - name: Install python3
+    package:
      name: python3
      state: present 
      
-  - pip:
+  - name: Install docker SDK
+    pip:
      name: docker
 
-  - service:
+  - name: Start docker services
+    service:
      name: docker
      state: started
      enabled: yes
  
 
-  - file:
+  - name: Create a directory
+    file:
      state: directory
      dest: "/mydir"
      
-  - copy:
+  - name: Copy the webpages into that directory
+    copy:
      dest: "/mydir/my.html"
      content: "this is my webpage launched from a docker container"
 
-  - docker_container:
+  - name: Pulling docker image from dockerhub and exposing it to the public
+    docker_container:
      name: "WebInDocker"
      image: httpd
      volumes: /mydir:/usr/local/apache2/htdocs/
@@ -60,7 +72,8 @@
      ports:
          - 8080:80
 
-  - firewalld:
+  - name: Enable firewall for port 8080
+    firewalld:
       port: 8080/tcp
       permanent: yes
       state: enabled

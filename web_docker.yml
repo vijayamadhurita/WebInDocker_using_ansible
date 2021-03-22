@@ -1,0 +1,67 @@
+- hosts: all
+  tasks:
+  - file:  
+     state: directory 
+     path: "/dvd5"
+
+  - mount:  
+     path: "/dvd5" 
+     src: "/dev/cdrom" 
+     fstype: "iso9660" 
+     state: mounted
+
+  - yum_repository: 
+     name: mydvd1 
+     description: 'yum repo for BaseOS'
+     baseurl: /dvd5/BaseOS 
+     gpgcheck: no
+
+  - yum_repository:  
+     name: mydvd2 
+     description: 'yum repo for AppStream' 
+     baseurl: /dvd5/AppStream 
+     gpgcheck: no
+
+
+  - yum_repository:  
+     name: 'docker' 
+     description: 'yum repo docker' 
+     baseurl: 'https://download.docker.com/linux/centos/7/x86_64/stable' 
+     gpgcheck: no
+
+  - command: yum install docker-ce --nobest -y 
+  
+  - package:
+     name: python3
+     state: present 
+     
+  - pip:
+     name: docker
+
+  - service:
+     name: docker
+     state: started
+     enabled: yes
+ 
+
+  - file:
+     state: directory
+     dest: "/mydir"
+     
+  - copy:
+     dest: "/mydir/my.html"
+     content: "this is my webpage launched from a docker container"
+
+  - docker_container:
+     name: "WebInDocker"
+     image: httpd
+     volumes: /mydir:/usr/local/apache2/htdocs/
+     state: started
+     ports:
+         - 8080:80
+
+  - firewalld:
+      port: 8080/tcp
+      permanent: yes
+      state: enabled
+      immediate: yes
